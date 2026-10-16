@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% load static %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f5f7f2">
+  <title>Signup|Budget Buddy</title>
+    <link rel="stylesheet" href="{% static 'signstyle.css' %}">
+</head>
+<body>
+  <main class="signup-card">
+    <h1>Create your account</h1>
+
+
+    <form action="#" method="post">
+      <div class="field">
+        <label for="name">Full name</label>
+        <input id="name" name="name" type="text" autocomplete="name"  required>
+      </div>
+
+      <div class="field">
+        <label for="email">Email address</label>
+        <input id="email" name="email" type="email" autocomplete="email"  required>
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="new-password" minlength="4" required>
+      </div>
+
+      <button type="submit">Create account</button>
+    </form>
+
+    <p class="signin">Already have an account? <a href="{% url 'login' %}">Log in</a></p>
+  </main>
+</body>
+</html>
