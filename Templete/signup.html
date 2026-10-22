@@ -13,20 +13,28 @@
     <h1>Create your account</h1>
 
 
-    <form action="#" method="post">
+    {% if form.non_field_errors %}
+      <div class="form-errors" role="alert">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <form action="{% url 'signup' %}" method="post">
+      {% csrf_token %}
       <div class="field">
-        <label for="name">Full name</label>
-        <input id="name" name="name" type="text" autocomplete="name"  required>
+        <label for="full_name">Full name</label>
+        <input id="full_name" name="full_name" type="text" autocomplete="name" maxlength="150" value="{{ form.full_name.value|default_if_none:'' }}" required>
+        {% for error in form.full_name.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
       </div>
 
       <div class="field">
         <label for="email">Email address</label>
-        <input id="email" name="email" type="email" autocomplete="email"  required>
+        <input id="email" name="email" type="email" autocomplete="email" maxlength="254" value="{{ form.email.value|default_if_none:'' }}" required>
+        {% for error in form.email.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
       </div>
 
       <div class="field">
         <label for="password">Password</label>
-        <input id="password" name="password" type="password" autocomplete="new-password" minlength="4" required>
+        <input id="password" name="password" type="password" autocomplete="new-password" required>
+        {% for error in form.password.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
       </div>
 
       <button type="submit">Create account</button>

@@ -41,6 +41,19 @@
       margin-bottom: 18px;
     }
 
+    .field-error,
+    .form-errors {
+      margin: 8px 0 0;
+      color: #a02c2c;
+      font-size: 0.88rem;
+      line-height: 1.4;
+    }
+
+    .form-errors ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
     label {
       display: block;
       margin-bottom: 8px;

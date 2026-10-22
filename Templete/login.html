@@ -12,6 +12,11 @@
     <main class="login-card">
         <a class="brand" href="{% url 'home' %}">Budget Buddy</a>
         
+        {% if messages %}
+            <ul class="messages" role="status">
+                {% for message in messages %}<li>{{ message }}</li>{% endfor %}
+            </ul>
+        {% endif %}
 
     <form action="#" method="post">
         <div class="field">
@@ -22,7 +27,8 @@
      <div class="field">
                 <div class="password-label">
                <label for="password">Password</label>
-                    <a href="#">Forgot password?</a>        </div>
+                    <a href="#">Forgot password?</a>        
+    </div>
                 <input id="password" name="password" type="password" autocomplete="current-password"  required>
            </div>
             <button type="submit">Log in</button>
