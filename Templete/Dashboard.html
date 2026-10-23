@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% load static %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f7f7">
+  <title>Dashboard | Budget Buddy</title>
+  <link rel="stylesheet" href="{% static 'dashboard.css' %}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="{% url 'Dashboard' %}">
+        <span class="brand-mark" aria-hidden="true">B</span>
+        <span>budget buddy<small>PERSONAL FINANCE</small></span>
+      </a>
+      <p class="nav-label">WORKSPACE</p>
+      <nav aria-label="Main navigation">
+        <a class="nav-link active" href="{% url 'Dashboard' %}"><span aria-hidden="true">◫</span> Overview</a>
+        <a class="nav-link" href="{% url 'add_record' %}"><span aria-hidden="true">＋</span> Add a record</a>
+        <a class="nav-link" href="{% url 'transaction_history' %}"><span aria-hidden="true">↕</span> Transactions</a>
+        <a class="nav-link" href="#budgets"><span aria-hidden="true">▤</span> My budgets</a>
+        <a class="nav-link" href="{% url 'savings_goals' %}"><span aria-hidden="true">◎</span> Savings goals</a>
+        {% if request.user.is_staff %}
+          <a class="nav-link admin-link" href="{% url 'admin:index' %}"><span aria-hidden="true">⚙</span> Administration</a>
+        {% endif %}
+      </nav>
+      <div class="sidebar-bottom">
+        {% if profile.is_premium %}
+          <div class="sidebar-premium"><span aria-hidden="true">✦</span> Premium member</div>
+        {% else %}
+          <div class="upgrade-card">
+            <strong>Request Premium</strong>
+            <p>Request access to expanded spending insights.</p>
+            {% if upgrade_request and upgrade_request.status == 'pending' %}
+              <span class="upgrade-note">Your request is awaiting review.</span>
+            {% else %}
+              <form method="post" action="{% url 'request_premium_upgrade' %}">
+                {% csrf_token %}
+                <button class="upgrade-button" type="submit">Request an upgrade</button>
+              </form>
+              {% if upgrade_request and upgrade_request.status == 'rejected' %}
+                <span class="upgrade-note">Your previous request was declined. You can request again.</span>
+              {% endif %}
+            {% endif %}
+          </div>
+        {% endif %}
+        <div class="sidebar-user">
+          <span class="avatar">{{ request.user.first_name|default:request.user.username|first|upper }}</span>
+          <span class="user-name">{{ request.user.first_name|default:request.user.username }}<small>{{ request.user.email }}</small></span>
+          <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button class="logout-button" type="submit" aria-label="Log out" title="Log out">↗</button>
+          </form>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      {% if messages %}
+        <ul class="messages" role="status">
+          {% for message in messages %}<li>{{ message }}</li>{% endfor %}
+        </ul>
+      {% endif %}
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">{{ today|date:"l, F j, Y" }} · {{ local_now|date:"g:i A" }} IST</p>
+          <h1>Your money, in focus.</h1>
+        </div>
+        <div class="topbar-badge"><span class="status-dot"></span> Account overview
+          {% if profile.is_premium %}<span class="premium-pill">✦ PREMIUM</span>{% endif %}
+        </div>
+        <a class="add-record-link" href="{% url 'add_record' %}">＋ Add record</a>
+      </header>
+
+      <section class="welcome-banner">
+        <div>
+          <p class="eyebrow light">YOUR MONEY, ORGANIZED</p>
+          <h2>Welcome{% if request.user.first_name %}, {{ request.user.first_name }}{% endif %} <span aria-hidden="true">✦</span></h2>
+          <p>A little clarity today makes a big difference tomorrow.</p>
+        </div>
+        <div class="banner-art" aria-hidden="true">
+          <span class="art-ring ring-one"></span><span class="art-ring ring-two"></span>
+          <span class="art-coin">₹</span><span class="art-spark">✦</span>
+        </div>
+      </section>
+
+      <section class="stats-grid" aria-label="Monthly financial summary">
+        <article class="stat-card balance-card">
+          <div class="stat-heading"><span>Monthly balance</span><span class="stat-icon green">↗</span></div>
+          <p class="stat-value">₹ {{ monthly_balance|floatformat:2 }}</p>
+          <p class="stat-caption">Income less expenses and savings · {{ today|date:"F Y" }}</p>
+        </article>
+        <article class="stat-card">
+          <div class="stat-heading"><span>Money in</span><span class="stat-icon mint">↓</span></div>
+          <p class="stat-value">₹ {{ monthly_income|floatformat:2 }}</p>
+          <p class="stat-caption">Received month to date</p>
+        </article>
+        <article class="stat-card">
+          <div class="stat-heading"><span>Money out</span><span class="stat-icon peach">↑</span></div>
+          <p class="stat-value">₹ {{ monthly_expenses|floatformat:2 }}</p>
+          <p class="stat-caption">Spent month to date</p>
+        </article>
+        <article class="stat-card">
+          <div class="stat-heading"><span>Saved this month</span><span class="stat-icon mint">↗</span></div>
+          <p class="stat-value">₹ {{ monthly_savings|floatformat:2 }}</p>
+          <p class="stat-caption">Moved into savings goals</p>
+        </article>
+        <article class="stat-card">
+          <div class="stat-heading"><span>Budget set aside</span><span class="stat-icon lilac">▤</span></div>
+          <p class="stat-value">₹ {{ budget_total|floatformat:2 }}</p>
+          <p class="stat-caption">Budgets active today</p>
+        </article>
+      </section>
+
+      <div class="content-grid">
+        <section class="panel transactions-panel" id="transactions">
+          <div class="panel-heading">
+            <div><p class="eyebrow">YOUR ACTIVITY</p><h2>Recent transactions</h2></div>
+            <a class="view-all-link" href="{% url 'transaction_history' %}">View all</a>
+          </div>
+          {% if transactions %}
+            <div class="transaction-list">
+              {% for transaction in transactions %}
+                <article class="transaction-row">
+                  <span class="transaction-icon {% if transaction.kind == 'income' %}income-icon{% else %}expense-icon{% endif %}">
+                    {% if transaction.kind == 'income' %}↓{% else %}↑{% endif %}
+                  </span>
+                  <span class="transaction-name">{{ transaction.title }}<small>{{ transaction.detail }} · {{ transaction.date|date:"M j, Y" }}</small></span>
+                  <strong class="{% if transaction.kind == 'income' %}amount-positive{% else %}amount-negative{% endif %}">
+                    {% if transaction.kind == 'income' %}+{% else %}−{% endif %}₹ {{ transaction.amount|floatformat:2 }}
+                  </strong>
+                </article>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="empty-state"><span aria-hidden="true">↗</span><strong>Your story starts here.</strong><p>Add an income or expense to see your activity.</p></div>
+          {% endif %}
+        </section>
+
+        <section class="panel budgets-panel" id="budgets">
+          <div class="panel-heading">
+            <div><p class="eyebrow">STAY ON TRACK</p><h2>Active budgets</h2></div>
+            <span class="panel-count">{{ budget_rows|length }}</span>
+          </div>
+          {% if budget_rows %}
+            <div class="budget-list">
+              {% for row in budget_rows %}
+                <article class="budget-item">
+                  <div class="budget-title"><strong>{{ row.budget.get_category_display }}</strong><span>{{ row.percent }}%</span></div>
+                  <div class="progress-track" role="progressbar" aria-label="{{ row.budget.get_category_display }} budget used" aria-valuenow="{{ row.percent }}" aria-valuemin="0" aria-valuemax="100"><span style="width: {{ row.percent }}%"></span></div>
+                  <p>₹ {{ row.spent|floatformat:2 }} <span>of ₹ {{ row.budget.amount|floatformat:2 }}</span></p>
+                </article>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="empty-state compact"><span aria-hidden="true">▤</span><strong>No active budgets yet</strong><p>Budgets you create will show up here.</p></div>
+          {% endif %}
+        </section>
+
+        <section class="panel goals-panel" id="goals">
+          <div class="panel-heading">
+            <div><p class="eyebrow">LITTLE BY LITTLE</p><h2>Savings goals</h2></div>
+            <a class="view-all-link" href="{% url 'savings_goals' %}">Manage goals</a>
+          </div>
+          {% if active_goals %}
+            <div class="goal-list">
+              {% for goal in active_goals %}
+                <article class="goal-item">
+                  <span class="goal-icon" aria-hidden="true">◎</span>
+                  <div class="goal-info">
+                    <div class="budget-title"><strong>{{ goal.name }}</strong><span>₹ {{ goal.current_amount|floatformat:2 }} / ₹ {{ goal.target_amount|floatformat:2 }}</span></div>
+                    <div class="progress-track goal-track"><span style="width: {% widthratio goal.current_amount goal.target_amount 100 %}%"></span></div>
+                    {% if goal.target_date %}<small>Target {{ goal.target_date|date:"M j, Y" }}</small>{% endif %}
+                  </div>
+                </article>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="empty-state compact"><span aria-hidden="true">◎</span><strong>Dream it, then save for it.</strong><p>Your active savings goals will appear here.</p></div>
+          {% endif %}
+        </section>
+
+        <section class="panel insights-panel">
+          <div class="panel-heading">
+            <div><p class="eyebrow">A LITTLE MORE CLARITY</p><h2>Money insights</h2></div>
+            {% if profile.is_premium %}<span class="premium-pill">✦ PREMIUM</span>{% else %}<span class="lock-mark" aria-label="Premium feature">✦</span>{% endif %}
+          </div>
+          {% if profile.is_premium %}
+            {% if category_spending %}
+              <p class="insights-intro">Where your money went this month</p>
+              <div class="category-list">
+                {% for category in category_spending %}
+                  <div class="category-row">
+                    <div class="budget-title"><strong>{{ category.label }}</strong><span>₹ {{ category.amount|floatformat:2 }}</span></div>
+                    <div class="progress-track category-track"><span style="width: {{ category.percent }}%"></span></div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="empty-state compact"><span aria-hidden="true">✦</span><strong>Your insights are on their way.</strong><p>Add expenses to see this month's spending breakdown.</p></div>
+            {% endif %}
+          {% else %}
+            <div class="premium-preview">
+              <span class="preview-spark" aria-hidden="true">✦</span>
+              <strong>See the bigger picture.</strong>
+              <p>Premium unlocks a monthly category breakdown and deeper spending insights.</p>
+              <span class="upgrade-note">Ask your administrator about Premium access.</span>
+            </div>
+          {% endif %}
+        </section>
+      </div>
+      <footer class="footer">Your finances, clearly. <span>Budget Buddy · {{ today|date:"Y" }}</span></footer>
+    </main>
+  </div>
+</body>
+</html>

@@ -93,3 +93,10 @@ body {
       font-size: 0.78rem;
       line-height: 1.6;
     }
+
+:root { color: #222; background: #f7f7f7; }
+.welcome-card { border-color: #e5e5e5; border-radius: 4px; box-shadow: none; }
+button, .actions a { border-radius: 3px; background: #222; }
+button:hover, .actions a:hover { background: #000; }
+.actions a.secondary { border-color: #ddd; background: #fff; color: #222; }
+.or-divider::before, .or-divider::after { background: #e5e5e5; }

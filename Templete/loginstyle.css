@@ -138,3 +138,12 @@
       color: #206746;
       line-height: 1.5;
     }
+
+:root { color: #222; background: #f7f7f7; }
+.login-card { border-color: #e5e5e5; border-radius: 4px; box-shadow: none; }
+.brand, a { color: #222; }
+input:not([type="checkbox"]) { border-radius: 3px; }
+input:focus-visible { outline-color: #ddd; border-color: #555; }
+button { border-radius: 3px; background: #222; }
+button:hover { background: #000; }
+.messages { color: #333; }

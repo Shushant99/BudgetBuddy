@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% load static %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f7f5">
+  <title>Savings goals | Budget Buddy</title>
+  <link rel="stylesheet" href="{% static 'dashboard.css' %}">
+</head>
+<body class="record-page-body">
+  <main class="goal-page">
+    <a class="record-back" href="{% url 'Dashboard' %}">← Back to dashboard</a>
+    {% if messages %}
+      <ul class="messages" role="status">
+        {% for message in messages %}<li>{{ message }}</li>{% endfor %}
+      </ul>
+    {% endif %}
+    <header class="goal-page-header">
+      <div>
+        <p class="eyebrow">YOUR SAVINGS</p>
+        <h1>Savings goals</h1>
+        <p>Track your progress and add contributions to your active goals.</p>
+      </div>
+      <a class="add-record-link" href="{% url 'add_record' %}?record_type=goal">＋ Create a goal</a>
+    </header>
+
+    <section class="goal-page-section">
+      <h2>Active goals</h2>
+      {% if active_goals %}
+        <div class="goal-page-list">
+          {% for goal in active_goals %}
+            <article class="goal-page-card">
+              <span class="goal-icon" aria-hidden="true">◎</span>
+              <div class="goal-info">
+                <div class="budget-title">
+                  <strong>{{ goal.name }}</strong>
+                  <span>₹ {{ goal.current_amount|floatformat:2 }} / ₹ {{ goal.target_amount|floatformat:2 }}</span>
+                </div>
+                <div class="progress-track goal-track" role="progressbar"
+                     aria-label="{{ goal.name }} progress"
+                     aria-valuenow="{% widthratio goal.current_amount goal.target_amount 100 %}"
+                     aria-valuemin="0" aria-valuemax="100">
+                  <span style="width: {% widthratio goal.current_amount goal.target_amount 100 %}%"></span>
+                </div>
+                <small>
+                  {% if goal.target_date %}Target {{ goal.target_date|date:"M j, Y" }} · {% endif %}
+                  ₹ {{ goal.remaining_amount|floatformat:2 }} remaining
+                </small>
+              </div>
+              <form class="goal-add-form" method="post" action="{% url 'contribute_to_savings_goal' goal.id %}">
+                {% csrf_token %}
+                <label for="contribution-{{ goal.id }}">
+                  Contribution amount
+                  <input id="contribution-{{ goal.id }}" name="amount" type="number"
+                         min="0.01" max="{{ goal.remaining_amount }}" step="0.01"
+                         placeholder="₹ 0.00" required>
+                </label>
+                <button type="submit">Add savings</button>
+              </form>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="goal-page-empty">
+          You don’t have any active goals yet.
+          <a href="{% url 'add_record' %}?record_type=goal">Create your first savings goal</a>.
+        </div>
+      {% endif %}
+    </section>
+
+    {% if completed_goals %}
+      <section class="goal-page-section">
+        <h2>Completed goals</h2>
+        <div class="goal-page-list">
+          {% for goal in completed_goals %}
+            <article class="goal-page-card">
+              <span class="goal-icon" aria-hidden="true">✓</span>
+              <div class="goal-info">
+                <div class="budget-title">
+                  <strong>{{ goal.name }}</strong>
+                  <span>₹ {{ goal.current_amount|floatformat:2 }} / ₹ {{ goal.target_amount|floatformat:2 }}</span>
+                </div>
+                {% if goal.target_date %}<small>Target {{ goal.target_date|date:"M j, Y" }}</small>{% endif %}
+              </div>
+              <span class="goal-completed-label">Completed</span>
+            </article>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+  </main>
+</body>
+</html>

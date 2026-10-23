@@ -4,33 +4,39 @@
     {% load static %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#f5f7f2">
+    <meta name="theme-color" content="#f7f7f7">
     <title>Log in | Budget Buddy</title>
     <link rel="stylesheet" href="{% static 'loginstyle.css' %}">
 </head>
 <body>
     <main class="login-card">
         <a class="brand" href="{% url 'home' %}">Budget Buddy</a>
+        <h1>Welcome back</h1>
+        <p class="intro">Log in to see how your money is doing.</p>
         
         {% if messages %}
             <ul class="messages" role="status">
                 {% for message in messages %}<li>{{ message }}</li>{% endfor %}
             </ul>
         {% endif %}
+        {% if form.non_field_errors %}
+            <div class="messages" role="alert">{{ form.non_field_errors }}</div>
+        {% endif %}
 
-    <form action="#" method="post">
+    <form method="post">
+        {% csrf_token %}
         <div class="field">
-            <label for="email">Email address</label>
-            <input id="email" name="email" type="email" autocomplete="email"  required>
-   </div>
+            <label for="{{ form.username.id_for_label }}">Email address</label>
+            {{ form.username }}
+            {% for error in form.username.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+        </div>
 
-     <div class="field">
-                <div class="password-label">
-               <label for="password">Password</label>
-                    <a href="#">Forgot password?</a>        
-    </div>
-                <input id="password" name="password" type="password" autocomplete="current-password"  required>
-           </div>
+        <div class="field">
+            <label for="{{ form.password.id_for_label }}">Password</label>
+            {{ form.password }}
+            {% for error in form.password.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+        </div>
+        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
             <button type="submit">Log in</button>
         </form>
 

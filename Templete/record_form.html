@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% load static %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f7f7">
+  <title>Add a record | Budget Buddy</title>
+  <link rel="stylesheet" href="{% static 'dashboard.css' %}">
+</head>
+<body class="record-page-body">
+  <main class="record-page">
+    <a class="record-back" href="{% url 'Dashboard' %}">← Back to dashboard</a>
+    <header class="record-header">
+      <p class="eyebrow">YOUR FINANCES</p>
+      <h1>Add a record</h1>
+      <p>Choose what you want to add. We’ll show only the details needed for that record.</p>
+    </header>
+
+    <form class="record-form" method="post" novalidate>
+      {% csrf_token %}
+      {% if selector_form.non_field_errors %}
+        <div class="record-errors" role="alert">{{ selector_form.non_field_errors }}</div>
+      {% endif %}
+      <div class="record-field">
+        <label for="{{ selector_form.record_type.id_for_label }}">{{ selector_form.record_type.label }}</label>
+        <select id="{{ selector_form.record_type.id_for_label }}" name="record_type">
+          {% for value, label in record_types %}
+            <option value="{{ value }}" {% if selected_type == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        {% for error in selector_form.record_type.errors %}<p class="record-error">{{ error }}</p>{% endfor %}
+      </div>
+
+      {% for record_type, entry_form in entry_forms.items %}
+        <section class="record-fields" data-record-fields="{{ record_type }}" {% if selected_type != record_type %}hidden{% endif %}>
+          {% if entry_form.non_field_errors %}
+            <div class="record-errors" role="alert">{{ entry_form.non_field_errors }}</div>
+          {% endif %}
+          {% for field in entry_form %}
+            <div class="record-field {% if field.name == 'notes' %}record-field-wide{% endif %}">
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.help_text %}<small class="record-help">{{ field.help_text }}</small>{% endif %}
+              {% for error in field.errors %}<p class="record-error">{{ error }}</p>{% endfor %}
+            </div>
+          {% endfor %}
+        </section>
+      {% endfor %}
+
+      <div class="record-actions">
+        <a href="{% url 'Dashboard' %}">Cancel</a>
+        <button type="submit">Save record</button>
+      </div>
+    </form>
+  </main>
+  <script>
+    const recordTypeSelect = document.getElementById('id_record_type');
+    const recordSections = document.querySelectorAll('[data-record-fields]');
+
+    function showRecordFields() {
+      for (const section of recordSections) {
+        const isSelected = section.dataset.recordFields === recordTypeSelect.value;
+        section.hidden = !isSelected;
+        for (const field of section.querySelectorAll('input, select, textarea')) {
+          field.disabled = !isSelected;
+        }
+      }
+    }
+
+    recordTypeSelect.addEventListener('change', showRecordFields);
+    showRecordFields();
+  </script>
+</body>
+</html>
