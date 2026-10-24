@@ -17,6 +17,17 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from Backend import api_views as v
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/signup/', v.signup),
+    path('api/login/', v.login_view),
+    path('api/logout/', v.logout_view),
+    path('api/dashboard/', v.dashboard),
+    path('api/transactions/', v.transactions),
+    path('api/records/', v.add_record),
+    path('api/savings-goals/', v.savings_goals),
+    path('api/savings-goals/<int:goal_id>/contribute/', v.contribute),
+    path('api/premium-request/', v.request_premium),
 ]
