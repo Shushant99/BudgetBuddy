@@ -1,33 +1,45 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
+const TOKEN_KEY = 'bb_token';
 
-export async function apiRequest(path, { method = 'GET', token, body } = {}) {
-  const headers = { Accept: 'application/json' }
-  if (body !== undefined) headers['Content-Type'] = 'application/json'
-  if (token) headers.Authorization = `Token ${token}`
+export const getToken = () => localStorage.getItem(TOKEN_KEY);
+export const setToken = (t) => (t ? localStorage.setItem(TOKEN_KEY, t) : localStorage.removeItem(TOKEN_KEY));
 
-  let response
-  try {
-    response = await fetch(`${API_BASE_URL}${path}`, {
-      method,
-      headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
-    })
-  } catch {
-    throw new Error('Could not connect to BudgetBuddy. Check that the backend is running.')
+export class ApiError extends Error {
+  constructor(status, errors) {
+    super('Request failed');
+    this.status = status;
+    this.errors = errors;
   }
+}
 
-  if (response.status === 204) return null
+export async function api(path, { method = 'GET', body, params } = {}) {
+  const qs = new URLSearchParams(Object.entries(params || {}).filter(([, v]) => v)).toString();
+  const headers = { 'Content-Type': 'application/json' };
+  const token = getToken();
+  if (token) headers.Authorization = `Token ${token}`;
 
-  const contentType = response.headers.get('content-type') || ''
-  const data = contentType.includes('application/json')
-    ? await response.json()
-    : await response.text()
+  const res = await fetch(`/api${path}${qs ? `?${qs}` : ''}`, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = res.status === 204 ? null : await res.json().catch(() => null);
 
-  if (!response.ok) {
-    const error = new Error(typeof data === 'string' ? data : 'The request could not be completed.')
-    error.data = data
-    error.status = response.status
-    throw error
+  if (!res.ok) {
+    if (res.status === 401 && token) {
+      setToken(null);
+      localStorage.removeItem('bb_user');
+      window.location.href = '/login';
+    }
+    throw new ApiError(res.status, data || {});
   }
-  return data
+  return data;
+}
+
+export function errorMessages(err) {
+  const out = Object.entries(err?.errors || {}).flatMap(([key, val]) =>
+    (Array.isArray(val) ? val : [String(val)]).map((m) =>
+      key === 'non_field_errors' || key === 'detail' ? m : `${key.replace(/_/g, ' ')}: ${m}`
+    )
+  );
+  return out.length ? out : ['Something went wrong. Please try again.'];
 }

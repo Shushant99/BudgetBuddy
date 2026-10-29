@@ -1,16 +1,28 @@
-# React + Vite
+# BudgetBuddy frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The React and Vite application for BudgetBuddy. It includes account sign-in and
+registration, a monthly overview, transaction history, budgets, savings goals,
+contributions, and Premium upgrade requests.
 
-Currently, two official plugins are available:
+## Run locally
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+npm install
+npm run dev
+```
 
-## React Compiler
+By default, Vite proxies `/api` requests to Django at `http://127.0.0.1:8000`.
+Set `VITE_API_BASE_URL` in a local `.env` file if the API is hosted elsewhere.
+Do not include secrets in frontend environment variables; Vite exposes them to
+the browser.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Other commands
 
-## Expanding the ESLint configuration
+```bash
+npm run lint
+npm run build
+npm run preview
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+The UI uses Django's token-authenticated `/api` endpoints. The backend must be
+running and configured before sign-in or data operations will work.
