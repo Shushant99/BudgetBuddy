@@ -81,8 +81,18 @@ def collect_transactions(user, record_type='all', from_date=None, to_date=None, 
     items.sort(key=lambda t: t['date'], reverse=True)
     return items[:limit] if limit else items
 
-
 # ---------- dashboard ----------
+def net_before(user, day):
+    """Income minus expenses minus savings contributions dated before `day`.
+
+    This is the money left over from earlier months, which carries into the current month.
+    """
+    def total(model, field):
+        return model.objects.filter(user=user, **{f'{field}__lt': day}).aggregate(t=Sum('amount'))['t'] or 0
+
+    return total(Income, 'received_on') - total(Expense, 'spent_on') - total(SavingsContribution, 'contributed_on')
+
+
 @api_view(['GET'])
 def dashboard(request):
     user = request.user
@@ -99,6 +109,10 @@ def dashboard(request):
         user=user, contributed_on__gte=month_start, contributed_on__lte=today,
     ).aggregate(t=Sum('amount'))['t'] or 0
 
+    # Leftover from earlier months carries forward; savings already moved into goals stay in the goals.
+    carried_over = net_before(user, month_start)
+    total_saved = SavingsGoal.objects.filter(user=user).aggregate(t=Sum('current_amount'))['t'] or 0
+
     budget_rows = []
     for b in Budget.objects.filter(user=user, start_date__lte=today, end_date__gte=today):
         spent = Expense.objects.filter(
@@ -108,6 +122,25 @@ def dashboard(request):
             'id': b.id, 'category': b.get_category_display(), 'amount': b.amount,
             'spent': spent, 'percent': min(round(float(spent / b.amount * 100)), 100),
         })
+
+    # Totals across ALL active budgets (the `budgets` list below is trimmed to 4 for display).
+    budget_spent = sum((r['spent'] for r in budget_rows), 0)
+    budgets_over = sum(1 for r in budget_rows if r['spent'] > r['amount'])
+
+    # Where the money goes: everything available this month, split into spent / saved / reserved / free.
+    reserved = {}
+    for r in budget_rows:
+        left = r['amount'] - r['spent']
+        if left > 0:
+            reserved[r['category']] = reserved.get(r['category'], 0) + left
+    available = carried_over + monthly_income
+    allocation = {
+        'available': available,
+        'spent': monthly_expenses,
+        'saved': monthly_savings,
+        'reserved': [{'label': k, 'amount': v} for k, v in sorted(reserved.items(), key=lambda kv: -kv[1])],
+        'free': available - monthly_expenses - monthly_savings - sum(reserved.values(), 0),
+    }
 
     category_spending = []
     if profile.is_premium:
@@ -130,14 +163,18 @@ def dashboard(request):
         'monthly_income': monthly_income,
         'monthly_expenses': monthly_expenses,
         'monthly_savings': monthly_savings,
-        'monthly_balance': monthly_income - monthly_expenses - monthly_savings,
+        'carried_over': carried_over,
+        'monthly_balance': carried_over + monthly_income - monthly_expenses - monthly_savings,
+        'total_saved': total_saved,
         'budget_total': sum((r['amount'] for r in budget_rows), 0),
+        'budget_spent': budget_spent,
+        'budgets_over': budgets_over,
+        'allocation': allocation,
         'budgets': budget_rows[:4],
         'goals': SavingsGoalSerializer(goals, many=True).data,
         'transactions': collect_transactions(user, limit=10),
         'category_spending': category_spending,
     })
-
 
 # ---------- transactions ----------
 @api_view(['GET'])

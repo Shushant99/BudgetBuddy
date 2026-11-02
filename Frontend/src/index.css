@@ -1,6 +1,6 @@
 :root {
   --bg: #f4f5fb; --card: #fff; --ink: #1c1f33; --muted: #6b7090;
-  --brand: #5b5bf0; --green: #16a34a; --red: #dc2626; --line: #e6e8f2;
+  --brand: #5b5bf0; --green: #16a34a; --red: #dc2626; --amber: #f59e0b; --line: #e6e8f2;
 }
 * { box-sizing: border-box; }
 body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg); color: var(--ink); }
@@ -56,7 +56,39 @@ input, select, textarea { padding: 10px; border: 1px solid var(--line); border-r
 
 .center { min-height: 100vh; display: grid; place-items: center; padding: 16px; }
 .center .card { width: 100%; max-width: 400px; display: grid; gap: 14px; }
+/* Dashboard: main column + budget donut on the right */
+.dash-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; align-items: start; }
+.dash-main { min-width: 0; }
+.dash-main .grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.dash-aside { display: grid; gap: 16px; }
 
+.donut-panel h2 { margin-bottom: 2px; }
+.donut { position: relative; width: 100%; max-width: 220px; aspect-ratio: 1; margin: 20px auto; }
+.donut svg { display: block; width: 100%; height: 100%; }
+.donut circle { fill: none; stroke-width: 14; }
+.donut .donut-track { stroke: var(--line); }
+.donut-arc { animation: donut-in .9s cubic-bezier(.2, .7, .2, 1); }
+@keyframes donut-in { from { stroke-dasharray: 0 var(--circ); } }
+.donut-center { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+.donut-center strong { font-size: 32px; line-height: 1; }
+.donut-center small { margin-top: 6px; font-size: 12px; }
+.donut-legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.donut-legend li { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.donut-legend .amt { margin-left: auto; font-weight: 600; white-space: nowrap; }
+.donut-legend li.sub { padding-left: 14px; }
+.donut-legend .legend-group { margin-top: 4px; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.stat strong + small { margin-top: 4px; font-size: 12px; }
+.donut-center .donut-amount { font-size: 20px; line-height: 1.1; }
+.donut-legend small.pct { display: inline; margin-left: 6px; font-size: 12px; }
+.donut-sub { margin-top: 6px; font-size: 12px; }
+.donut-total { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+.donut-note { margin: 14px 0 0; padding: 8px 12px; border-radius: 8px; background: #fee2e2; color: #991b1b; font-size: 13px; }
+
+@media (max-width: 1080px) {
+  .dash-layout { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { .donut-arc { animation: none; } }
 @media (max-width: 800px) {
   .shell { grid-template-columns: 1fr; }
   .sidebar { flex-direction: row; flex-wrap: wrap; align-items: center; }
