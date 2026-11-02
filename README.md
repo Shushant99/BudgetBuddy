@@ -32,3 +32,6 @@ Infosys Internship Project – BudgetBuddy: Full-Stack Personal Budget Planning 
    python manage.py migrate
    python manage.py runserver
    ```
+
+5. Need React Setup :
+   will update soon
