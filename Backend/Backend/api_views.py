@@ -7,6 +7,9 @@ from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from Backend.notifications import (
+    notify_budget_paid, notify_contribution, notify_for_record, notify_premium,
+)
 
 from Backend.models import (
     Budget, Expense, Income, PremiumUpgradeRequest, Profile, SavingsContribution, SavingsGoal,
@@ -121,6 +124,8 @@ def dashboard(request):
         budget_rows.append({
             'id': b.id, 'category': b.get_category_display(), 'amount': b.amount,
             'spent': spent, 'percent': min(round(float(spent / b.amount * 100)), 100),
+            'paid': b.paid_expense_id is not None or spent >= b.amount,
+            'can_undo': b.paid_expense_id is not None,
         })
 
     # Totals across ALL active budgets (the `budgets` list below is trimmed to 4 for display).
@@ -171,6 +176,7 @@ def dashboard(request):
         'budgets_over': budgets_over,
         'allocation': allocation,
         'budgets': budget_rows[:4],
+        'budget_checklist':budget_rows,
         'goals': SavingsGoalSerializer(goals, many=True).data,
         'transactions': collect_transactions(user, limit=10),
         'category_spending': category_spending,
@@ -208,7 +214,8 @@ def add_record(request):
         return Response({'record_type': ['Choose a valid record type.']}, status=400)
     serializer = serializer_class(data=request.data, context={'request': request})
     serializer.is_valid(raise_exception=True)
-    serializer.save(user=request.user)
+    record = serializer.save(user=request.user)
+    notify_for_record(request.user, request.data.get('record_type'), record)
     return Response(serializer.data, status=201)
 
 
@@ -243,9 +250,42 @@ def contribute(request, goal_id):
             goal.status = SavingsGoal.Status.COMPLETED
             fields.append('status')
         goal.save(update_fields=fields)
-
+        goal.refresh_from_db()
+        notify_contribution(request.user, goal, amount)
     return Response({'detail': f'₹{amount:.2f} added to {goal.name}.'})
 
+
+@api_view(['POST'])
+def toggle_budget_paid(request, budget_id):
+    """Tick a budget as paid (records the unspent amount as an expense today) or undo that."""
+    today = timezone.localdate()
+    with transaction.atomic():
+        budget = get_object_or_404(Budget.objects.select_for_update(), pk=budget_id, user=request.user)
+        label = budget.get_category_display()
+
+        if budget.paid_expense_id:
+            budget.paid_expense.delete()  # the link is cleared automatically (SET_NULL)
+            return Response({'detail': f'{label} budget marked as not paid.', 'paid': False})
+
+        if not budget.start_date <= today <= budget.end_date:
+            return Response({'detail': 'This budget is not active right now.'}, status=400)
+
+        spent = Expense.objects.filter(
+            user=request.user, category=budget.category,
+            spent_on__gte=budget.start_date, spent_on__lte=today,
+        ).aggregate(t=Sum('amount'))['t'] or 0
+        remaining = budget.amount - spent
+        if remaining <= 0:
+            return Response({'detail': f'Your {label} budget is already covered by your expenses.'}, status=400)
+
+        budget.paid_expense = Expense.objects.create(
+            user=request.user, category=budget.category, amount=remaining,
+            description=f'{label} budget paid', spent_on=today,
+        )
+        budget.save(update_fields=['paid_expense', 'updated_at'])
+
+        notify_budget_paid(request.user, budget, remaining)
+    return Response({'detail': f'{label} budget marked as paid (₹{remaining:.2f}).', 'paid': True})
 
 # ---------- premium ----------
 @api_view(['POST'])
@@ -272,4 +312,5 @@ def request_premium(request):
         except IntegrityError:
             return Response({'detail': pending_msg})
 
+    notify_premium(request.user, PremiumUpgradeRequest.Status.PENDING)
     return Response({'detail': 'Your Premium upgrade request was sent to an administrator.'}, status=201)

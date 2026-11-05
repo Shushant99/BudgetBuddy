@@ -32,6 +32,8 @@ export async function api(path, { method = 'GET', body, params } = {}) {
     }
     throw new ApiError(res.status, data || {});
   }
+    if (method !== 'GET') window.dispatchEvent(new Event('bb:changed')); 
+  
   return data;
 }
 
