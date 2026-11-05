@@ -36,6 +36,12 @@ const FORMS = {
     { name: 'target_date', label: 'Target date', type: 'date', optional: true },
   ] },
 };
+const AMOUNT_PROPS = {
+  inputMode: 'decimal',
+  autoComplete: 'off',
+  pattern: '[0-9]+(\\.[0-9]{1,2})?',
+  title: 'Enter an amount like 1500 or 1500.50',
+};
 
 const today = () => new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in local time
 
@@ -90,13 +96,12 @@ export default function AddRecord() {
               <textarea name={f.name} rows="3" value={values[f.name] || ''} onChange={onChange} />
             ) : (
               <input
-                type={f.type}
+                type={f.type === 'number' ? 'text' : f.type}
                 name={f.name}
                 value={values[f.name] || ''}
                 onChange={onChange}
                 required={!f.optional}
-                step={f.type === 'number' ? '0.01' : undefined}
-                min={f.type === 'number' ? '0' : undefined}
+                {...(f.type === 'number' ? AMOUNT_PROPS : {})}
               />
             )}
           </label>
