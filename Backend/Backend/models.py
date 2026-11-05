@@ -145,6 +145,13 @@ class Budget(models.Model):
     )
     start_date = models.DateField()
     end_date = models.DateField()
+    paid_expense = models.OneToOneField(
+        Expense,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='paid_budget',
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -251,19 +258,49 @@ class SavingsContribution(models.Model):
 
 
 class Notification(models.Model):
+    class Kind(models.TextChoices):
+        INCOME = 'income', 'Money in'
+        EXPENSE = 'expense', 'Money out'
+        BUDGET = 'budget', 'Budget'
+        SAVINGS = 'savings', 'Savings'
+        WARNING = 'warning', 'Warning'
+        ACCOUNT = 'account', 'Account'
+        GENERAL = 'general', 'General'
+
+    class Level(models.TextChoices):
+        INFO = 'info', 'Info'
+        SUCCESS = 'success', 'Success'
+        WARNING = 'warning', 'Warning'
+        DANGER = 'danger', 'Danger'
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='notifications',
     )
+    kind = models.CharField(max_length=10, choices=Kind.choices, default=Kind.GENERAL)
+    level = models.CharField(max_length=10, choices=Level.choices, default=Level.INFO)
     title = models.CharField(max_length=150)
     message = models.TextField()
+    # Page in the app that the notification points to, e.g. /transactions
+    link = models.CharField(max_length=100, blank=True)
+    # Set on alerts that must only ever be sent once (e.g. "budget 5 is 80% used").
+    dedupe_key = models.CharField(max_length=80, blank=True, null=True)
     is_read = models.BooleanField(default=False)
+    # Deleted by the user. Rows with a dedupe_key are hidden rather than removed,
+    # so the same alert is not raised again.
+    is_dismissed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     read_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         ordering = ['-created_at', '-id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'dedupe_key'],
+                name='unique_notification_dedupe_key_per_user',
+            ),
+        ]
 
     def __str__(self):
         return self.title
@@ -297,3 +334,15 @@ class Report(models.Model):
 
     def __str__(self):
         return f'{self.get_report_type_display()} report for {self.user}'
+
+    start_date = models.DateField()
+    end_date = models.DateField()
+
+    paid_expense = models.OneToOneField(
+        Expense,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='paid_report',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)

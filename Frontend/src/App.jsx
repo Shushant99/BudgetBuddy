@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import AddRecord from './pages/AddRecord';
 import Transactions from './pages/Transactions';
 import SavingsGoals from './pages/SavingsGoals';
+import Notifications from './pages/Notifications';
 
 function Protected() {
   const { user } = useAuth();
@@ -32,6 +33,7 @@ export default function App() {
         <Route path="/add-record" element={<AddRecord />} />
         <Route path="/transactions" element={<Transactions />} />
         <Route path="/savings-goals" element={<SavingsGoals />} />
+        <Route path="/notifications" element={<Notifications />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

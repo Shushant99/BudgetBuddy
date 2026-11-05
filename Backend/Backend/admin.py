@@ -1,7 +1,7 @@
 from django.contrib import admin, messages
 from django.db import transaction
 from django.utils import timezone
-
+from Backend.notifications import notify_premium
 from Backend.models import (
     Budget,
     Expense,
@@ -39,6 +39,7 @@ class PremiumUpgradeRequestAdmin(admin.ModelAdmin):
                 upgrade_request.save(
                     update_fields=('status', 'reviewed_at', 'reviewed_by'),
                 )
+                notify_premium(upgrade_request.user, PremiumUpgradeRequest.Status.APPROVED)
         self.message_user(
             request,
             f'{count} request(s) approved and Premium enabled.',
@@ -47,18 +48,16 @@ class PremiumUpgradeRequestAdmin(admin.ModelAdmin):
 
     @admin.action(description='Reject selected pending requests')
     def reject_requests(self, request, queryset):
-        updated = queryset.filter(
-            status=PremiumUpgradeRequest.Status.PENDING,
-        ).update(
+            pending = queryset.filter(status=PremiumUpgradeRequest.Status.PENDING)
+            users = [r.user for r in pending.select_related('user')]
+            updated = pending.update(
             status=PremiumUpgradeRequest.Status.REJECTED,
             reviewed_at=timezone.now(),
             reviewed_by=request.user,
-        )
-        self.message_user(
-            request,
-            f'{updated} pending request(s) rejected.',
-            messages.SUCCESS,
-        )
+            )
+            for user in users:
+                notify_premium(user, PremiumUpgradeRequest.Status.REJECTED)
+            
 
 
 @admin.register(Profile)

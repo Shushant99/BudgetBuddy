@@ -16,8 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-
 from Backend import api_views as v
+from Backend import notification_views as nv
+
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -29,5 +31,10 @@ urlpatterns = [
     path('api/records/', v.add_record),
     path('api/savings-goals/', v.savings_goals),
     path('api/savings-goals/<int:goal_id>/contribute/', v.contribute),
+    path('api/budgets/<int:budget_id>/toggle-paid/', v.toggle_budget_paid),
     path('api/premium-request/', v.request_premium),
+    path('api/notifications/', nv.notification_list),
+    path('api/notifications/read-all/', nv.notifications_read_all),
+    path('api/notifications/<int:notification_id>/', nv.notification_delete),
+    path('api/notifications/<int:notification_id>/read/', nv.notification_read),
 ]

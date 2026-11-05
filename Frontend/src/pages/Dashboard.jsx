@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, errorMessages } from '../api';
 import { money } from '../utils';
 import TransactionRow from '../components/TransactionRow';
 import BudgetDonut from '../components/BudgetDonut';
 import MoneyDonut from '../components/MoneyDonut';
+import BudgetChecklist from '../components/BudgetChecklist';
+import AlertStrip from '../components/AlertStrip';
 
 function Stat({ label, value, note }) {
   return (
@@ -24,10 +26,11 @@ export default function Dashboard() {
   const [d, setD] = useState(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const load = useCallback(() => api('/dashboard/').then(setD), []);
 
   useEffect(() => {
-    api('/dashboard/').then(setD).catch((e) => setError(errorMessages(e)[0]));
-  }, []);
+    load().catch((e) => setError(errorMessages(e)[0]));
+  }, [load]);
 
   const requestPremium = async () => {
     try {
@@ -51,6 +54,8 @@ export default function Dashboard() {
         </div>
         <Link className="btn" to="/add-record">＋ Add record</Link>
       </header>
+            
+      <AlertStrip />
 
       {notice && <p className="alert info">{notice}</p>}
 
@@ -124,6 +129,7 @@ export default function Dashboard() {
 
         <aside className="dash-aside">
           <MoneyDonut allocation={d.allocation} carriedOver={d.carried_over} />
+          <BudgetChecklist items={d.budget_checklist} onChange={load} />
           <BudgetDonut total={d.budget_total} spent={d.budget_spent} overCount={d.budgets_over} />
         </aside>
       </div>
