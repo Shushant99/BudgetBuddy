@@ -50,7 +50,8 @@ export default function SavingsGoals() {
           </small>
           <div className="filters" style={{ marginTop: 12 }}>
             <input
-              type="number" min="0.01" step="0.01" placeholder="₹ 0.00"
+              type="text" inputMode="decimal" autoComplete="off" placeholder="₹ 0.00"
+              pattern="[0-9]+(\.[0-9]{1,2})?" title="Enter an amount like 1500 or 1500.50"
               value={amounts[g.id] || ''}
               onChange={(e) => setAmounts({ ...amounts, [g.id]: e.target.value })}
             />
