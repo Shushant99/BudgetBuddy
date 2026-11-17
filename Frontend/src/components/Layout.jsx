@@ -9,6 +9,7 @@ const links = [
   ['/transactions', 'Transactions'],
   ['/savings-goals', 'Savings goals'],
   ['/notifications', 'Notifications'],
+  ['/reports', 'Reports'],
 ];
 
 function Shell() {

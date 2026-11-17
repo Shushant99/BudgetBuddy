@@ -8,8 +8,8 @@ import Dashboard from './pages/Dashboard';
 import AddRecord from './pages/AddRecord';
 import Transactions from './pages/Transactions';
 import SavingsGoals from './pages/SavingsGoals';
+import Reports from './pages/Reports';
 import Notifications from './pages/Notifications';
-
 function Protected() {
   const { user } = useAuth();
   return user ? <Layout /> : <Navigate to="/login" replace />;
@@ -33,6 +33,7 @@ export default function App() {
         <Route path="/add-record" element={<AddRecord />} />
         <Route path="/transactions" element={<Transactions />} />
         <Route path="/savings-goals" element={<SavingsGoals />} />
+        <Route path="/reports" element={<Reports />} />
         <Route path="/notifications" element={<Notifications />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
