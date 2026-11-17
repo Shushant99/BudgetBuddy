@@ -45,3 +45,28 @@ export function errorMessages(err) {
   );
   return out.length ? out : ['Something went wrong. Please try again.'];
 }
+// Downloads a file from the API (e.g. a CSV report) using the logged-in user's token.
+export async function downloadFile(path, params = {}, fallbackName = 'download') {
+  const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v)).toString();
+  const token = getToken();
+  const res = await fetch(`/api${path}${qs ? `?${qs}` : ''}`, {
+    headers: token ? { Authorization: `Token ${token}` } : {},
+  });
+  if (!res.ok) {
+    if (res.status === 401 && token) {
+      setToken(null);
+      localStorage.removeItem('bb_user');
+      window.location.href = '/login';
+    }
+    throw new ApiError(res.status, await res.json().catch(() => ({})));
+  }
+  const name = /filename="([^"]+)"/.exec(res.headers.get('Content-Disposition') || '')?.[1] || fallbackName;
+  const url = URL.createObjectURL(await res.blob());
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = name;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}

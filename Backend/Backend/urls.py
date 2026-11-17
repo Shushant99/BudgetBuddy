@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path
 from Backend import api_views as v
 from Backend import notification_views as nv
-
+from Backend import report_views as rv
 
 
 urlpatterns = [
@@ -37,4 +37,6 @@ urlpatterns = [
     path('api/notifications/read-all/', nv.notifications_read_all),
     path('api/notifications/<int:notification_id>/', nv.notification_delete),
     path('api/notifications/<int:notification_id>/read/', nv.notification_read),
+    path('api/reports/', rv.report),
+    path('api/reports/export/', rv.report_export),
 ]
