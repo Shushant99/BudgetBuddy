@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from Backend import api_views as v
+from Backend import email_views as ev
 from Backend import notification_views as nv
 from Backend import report_views as rv
 
@@ -32,6 +33,7 @@ urlpatterns = [
     path('api/savings-goals/', v.savings_goals),
     path('api/savings-goals/<int:goal_id>/contribute/', v.contribute),
     path('api/budgets/<int:budget_id>/toggle-paid/', v.toggle_budget_paid),
+    path('api/budgets/<int:budget_id>/toggle-paid/', v.toggle_budget_paid),
     path('api/premium-request/', v.request_premium),
     path('api/notifications/', nv.notification_list),
     path('api/notifications/read-all/', nv.notifications_read_all),
@@ -39,4 +41,6 @@ urlpatterns = [
     path('api/notifications/<int:notification_id>/read/', nv.notification_read),
     path('api/reports/', rv.report),
     path('api/reports/export/', rv.report_export),
+    path('api/email-settings/', ev.email_settings),
+    path('api/email-settings/test/', ev.email_test),
 ]

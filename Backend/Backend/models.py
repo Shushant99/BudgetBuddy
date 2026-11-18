@@ -15,6 +15,8 @@ class Profile(models.Model):
     date_of_birth = models.DateField(blank=True, null=True)
     preferred_currency = models.CharField(max_length=3, default='INR')
     is_premium = models.BooleanField(default=False)
+    email_alerts = models.BooleanField(default=True)
+    email_transactions = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -292,6 +294,7 @@ class Notification(models.Model):
     is_dismissed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     read_at = models.DateTimeField(blank=True, null=True)
+    emailed_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         ordering = ['-created_at', '-id']
