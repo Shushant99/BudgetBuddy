@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from Backend import api_views as v
+from Backend import email_views as ev
 from Backend import notification_views as nv
 from Backend import report_views as rv
 
@@ -39,4 +40,6 @@ urlpatterns = [
     path('api/notifications/<int:notification_id>/read/', nv.notification_read),
     path('api/reports/', rv.report),
     path('api/reports/export/', rv.report_export),
+    path('api/email-settings/', ev.email_settings),
+    path('api/email-settings/test/', ev.email_test),
 ]

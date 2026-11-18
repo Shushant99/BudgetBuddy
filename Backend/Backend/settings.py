@@ -142,3 +142,35 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework.authentication.TokenAuthentication'],
     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated'],
 }
+
+
+# Mailjet SMTP Configuration
+
+EMAIL_HOST = 'in-v3.mailjet.com'
+EMAIL_PORT = 587
+
+EMAIL_HOST_USER = os.environ.get('MAILJET_API_KEY', '')
+EMAIL_HOST_PASSWORD = os.environ.get('MAILJET_SECRET_KEY', '')
+
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_TIMEOUT = 15
+
+EMAIL_BACKEND = (
+    'django.core.mail.backends.smtp.EmailBackend'
+    if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD
+    else 'django.core.mail.backends.console.EmailBackend'
+)
+
+DEFAULT_FROM_EMAIL = os.environ.get(
+    'DEFAULT_FROM_EMAIL',
+    'Budget Buddy <your-verified-sender@example.com>'
+)
+
+APP_URL = os.environ.get(
+    'APP_URL', 'http://localhost:5173'
+).rstrip('/')
+
+ALERT_EMAILS_ASYNC = os.environ.get(
+    'ALERT_EMAILS_ASYNC', 'True'
+).lower() == 'true'

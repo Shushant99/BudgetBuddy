@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NotificationIcon from '../components/NotificationIcon';
 import { useNotifications } from '../notifications';
+import EmailSettings from '../components/EmailSettings';
 
 const isAlert = (n) => n.level === 'warning' || n.level === 'danger';
 
@@ -71,7 +72,9 @@ export default function Notifications() {
           <button className="ghost" onClick={confirmClear} disabled={!items.length}>Clear all</button>
         </div>
       </header>
+      <EmailSettings />
 
+      <div className="notif-tabs" role="group" aria-label="Filter notifications"></div>
       <div className="notif-tabs" role="group" aria-label="Filter notifications">
         {tabs.map(([key, label, count]) => (
           <button key={key} aria-pressed={tab === key} onClick={() => setTab(key)}>

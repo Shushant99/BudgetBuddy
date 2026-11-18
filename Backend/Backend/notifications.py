@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from django.db.models import Sum
 from django.utils import timezone
-
+from Backend.emails import send_alert_email
 from Backend.models import (
     Budget, Expense, Income, Notification, PremiumUpgradeRequest, SavingsContribution, SavingsGoal,
 )
@@ -47,8 +47,12 @@ def budget_spent(budget, today):
     ).aggregate(t=Sum('amount'))['t'] or 0
 
 
-def notify(user, kind, level, title, message='', link='', dedupe_key=None):
-    """Create a notification. With a dedupe_key the same alert is only ever created once per user."""
+def notify(user, kind, level, title, message='', link='', dedupe_key=None, email=None):
+    """Create a notification. With a dedupe_key the same alert is only ever created once per user.
+
+    The user is also emailed when their settings allow it: warnings and dangers by default,
+    always when email=True, never when email=False (see emails.wants_email).
+    """
     fields = {'kind': kind, 'level': level, 'title': title, 'message': message, 'link': link}
     if dedupe_key:
         obj, created = Notification.objects.get_or_create(user=user, dedupe_key=dedupe_key, defaults=fields)
@@ -62,6 +66,7 @@ def notify(user, kind, level, title, message='', link='', dedupe_key=None):
     )
     if stale:
         Notification.objects.filter(id__in=stale).delete()
+    send_alert_email(obj, email)
     return obj
 
 
@@ -174,7 +179,7 @@ def notify_premium(user, status):
                'An administrator will review it soon.', '/dashboard')
     elif status == PremiumUpgradeRequest.Status.APPROVED:
         notify(user, K.ACCOUNT, L.SUCCESS, 'Premium is now on',
-               'Your upgrade request was approved. Money insights are unlocked.', '/dashboard')
+               'Your upgrade request was approved. Money insights are unlocked.', '/dashboard',email=True)
     elif status == PremiumUpgradeRequest.Status.REJECTED:
         notify(user, K.ACCOUNT, L.WARNING, 'Premium request declined',
                'Your upgrade request was not approved. You can request it again from the dashboard.', '/dashboard')
@@ -210,7 +215,7 @@ def sync_time_based_alerts(user):
             notify(
                 user, K.BUDGET, L.INFO, f'{b.get_category_display()} budget ends {in_days(days_left)}',
                 f'{rupees(left)} of your {rupees(b.amount)} budget is still unspent.',
-                '/dashboard', f'budget:{b.id}:ending',
+                '/dashboard', f'budget:{b.id}:ending', email=True,
             )
 
     goals = SavingsGoal.objects.filter(user=user, status=SavingsGoal.Status.ACTIVE, target_date__isnull=False)
