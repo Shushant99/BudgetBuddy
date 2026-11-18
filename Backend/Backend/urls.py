@@ -33,6 +33,7 @@ urlpatterns = [
     path('api/savings-goals/', v.savings_goals),
     path('api/savings-goals/<int:goal_id>/contribute/', v.contribute),
     path('api/budgets/<int:budget_id>/toggle-paid/', v.toggle_budget_paid),
+    path('api/budgets/<int:budget_id>/toggle-paid/', v.toggle_budget_paid),
     path('api/premium-request/', v.request_premium),
     path('api/notifications/', nv.notification_list),
     path('api/notifications/read-all/', nv.notifications_read_all),
