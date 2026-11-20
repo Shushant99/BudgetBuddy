@@ -9,9 +9,24 @@ from django.utils import timezone
 from django.utils.html import escape
 
 from Backend.models import Notification, Profile
+from contextlib import contextmanager
 
 logger = logging.getLogger(__name__)
+_local = threading.local()
 
+
+@contextmanager
+def send_now():
+    """Inside this block alert emails are sent immediately instead of in the background.
+
+    Used by the daily alert job, which must know how many emails really went out. It only affects
+    the code running in this block, never other requests.
+    """
+    _local.send_now = True
+    try:
+        yield
+    finally:
+        _local.send_now = False
 COLORS = {'info': '#5b5bf0', 'success': '#16a34a', 'warning': '#f59e0b', 'danger': '#dc2626'}
 
 
@@ -105,7 +120,7 @@ def send_alert_email(notification, force=None):
     try:
         if not wants_email(notification.user, notification.kind, notification.level, force):
             return
-        if getattr(settings, 'ALERT_EMAILS_ASYNC', True):
+        if getattr(settings, 'ALERT_EMAILS_ASYNC', True) and not getattr(_local, 'send_now', False):
             threading.Thread(target=_deliver, args=(notification.pk, True)).start()
         else:
             _deliver(notification.pk, False)
