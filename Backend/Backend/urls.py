@@ -20,6 +20,7 @@ from Backend import api_views as v
 from Backend import email_views as ev
 from Backend import notification_views as nv
 from Backend import report_views as rv
+from Backend import ops_views as ops
 
 
 urlpatterns = [
@@ -43,4 +44,6 @@ urlpatterns = [
     path('api/reports/export/', rv.report_export),
     path('api/email-settings/', ev.email_settings),
     path('api/email-settings/test/', ev.email_test),
+    path('api/health/', ops.health),
+    path('api/internal/check-alerts/', ops.check_alerts_job),
 ]

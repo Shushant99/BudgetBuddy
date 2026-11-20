@@ -1,4 +1,10 @@
-Django>=5.2,<5.3
-djangorestframework>=3.16,<4
-mysqlclient>=2.2,<3
-python-dotenv>=1.0,<2
+# Your existing dependencies (e.g., Django, djangorestframework, django-cors-headers)
+Django>=4.2,<5.0
+djangorestframework
+django-cors-headers
+
+# --- NEW: Required for Render Deployment ---
+gunicorn==21.2.0
+psycopg2-binary==2.9.9
+dj-database-url==2.1.0
+python-dotenv==1.0.0

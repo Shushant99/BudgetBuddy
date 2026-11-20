@@ -1,4 +1,5 @@
 const TOKEN_KEY = 'bb_token';
+export const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
 export const getToken = () => localStorage.getItem(TOKEN_KEY);
 export const setToken = (t) => (t ? localStorage.setItem(TOKEN_KEY, t) : localStorage.removeItem(TOKEN_KEY));
@@ -17,7 +18,7 @@ export async function api(path, { method = 'GET', body, params } = {}) {
   const token = getToken();
   if (token) headers.Authorization = `Token ${token}`;
 
-  const res = await fetch(`/api${path}${qs ? `?${qs}` : ''}`, {
+  const res = await fetch(`${API_URL}/api${path}${qs ? `?${qs}` : ''}`, {
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,
@@ -49,7 +50,7 @@ export function errorMessages(err) {
 export async function downloadFile(path, params = {}, fallbackName = 'download') {
   const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v)).toString();
   const token = getToken();
-  const res = await fetch(`/api${path}${qs ? `?${qs}` : ''}`, {
+  const res = await fetch(`${API_URL}/api${path}${qs ? `?${qs}` : ''}`, {
     headers: token ? { Authorization: `Token ${token}` } : {},
   });
   if (!res.ok) {
@@ -69,4 +70,5 @@ export async function downloadFile(path, params = {}, fallbackName = 'download')
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
+  
 }
