@@ -171,8 +171,8 @@ REST_FRAMEWORK = {
 
 # Mailjet SMTP Configuration
 
-EMAIL_HOST = 'in-v3.mailjet.com'
-EMAIL_PORT = 587
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'in-v3.mailjet.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '2525'))
 
 EMAIL_HOST_USER = os.environ.get('MAILJET_API_KEY', '')
 EMAIL_HOST_PASSWORD = os.environ.get('MAILJET_SECRET_KEY', '')
